@@ -1,0 +1,26 @@
+name: FenixProbe
+options:
+  bundleIdPrefix: com.mu5ad
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+targets:
+  FenixProbe:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: FenixProbe
+        UIBackgroundModes:
+          - voip
+          - location
+          - bluetooth-central
+        NSLocationAlwaysAndWhenInUseUsageDescription: "FenixProbe registra eventos de arranque para el experimento FENIX."
+        NSLocationWhenInUseUsageDescription: "FenixProbe registra eventos de arranque para el experimento FENIX."
+        NSBluetoothAlwaysUsageDescription: "FenixProbe registra eventos de arranque para el experimento FENIX."
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UILaunchScreen: {}

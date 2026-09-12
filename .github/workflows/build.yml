@@ -1,0 +1,46 @@
+name: Build FenixProbe (unsigned IPA para TrollStore)
+
+# Pipeline validado en Mu5ad/BluHeli: macos-15 obligatorio (xcodegen objectVersion 77).
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar XcodeGen
+        run: brew install xcodegen
+
+      - name: Generar proyecto + diagnosticar
+        run: |
+          xcodegen generate --spec FenixProbe/project.yml --project FenixProbe
+          ls -la FenixProbe/
+          plutil -lint FenixProbe/FenixProbe.xcodeproj/project.pbxproj || true
+          xcodebuild -list -project FenixProbe/FenixProbe.xcodeproj || true
+
+      - name: Build unsigned (generic iOS device sin firma)
+        run: |
+          set -o pipefail
+          xcodebuild -project FenixProbe/FenixProbe.xcodeproj \
+            -scheme FenixProbe \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            archive -archivePath FenixProbe/build/FenixProbe.xcarchive 2>&1 | tail -40
+
+      - name: Empaquetar IPA (Payload)
+        run: |
+          mkdir -p ipa/Payload
+          cp -R FenixProbe/build/FenixProbe.xcarchive/Products/Applications/*.app ipa/Payload/
+          cd ipa && zip -r ../FenixProbe-unsigned.ipa Payload && cd ..
+          ls -la FenixProbe-unsigned.ipa
+
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: FenixProbe-unsigned-ipa
+          path: FenixProbe-unsigned.ipa
+          if-no-files-found: error
